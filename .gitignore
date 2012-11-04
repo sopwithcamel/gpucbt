@@ -1,0 +1,24 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Vim files
+*.swp
+
+# SCons temp files
+*.dblite
+*.os
+
+# Binaries
+test/testcbt
+service/cbtserver
+service/cbtclient
