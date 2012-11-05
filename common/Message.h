@@ -25,12 +25,13 @@
 #define SRC_MESSAGE_H
 #include <stdint.h>
 #include <string.h>
+#include <thrust/host_vector.h>
 
 namespace gpucbt {
     class Message {
       public:
         Message();
-        ~Message();
+        __host__ __device__ ~Message();
         uint32_t hash() const {
             return hash_;
         }
@@ -51,6 +52,10 @@ namespace gpucbt {
         }
         void Merge(const Message& msg);
         bool SameKey(const Message& msg);
+
+        __host__ __device__ bool operator<(const Message& rhs) const {
+            return (hash_ < rhs.hash_);
+        }
       private:
         uint32_t hash_;
         char key_[16];

@@ -56,7 +56,8 @@ namespace gpucbt {
 
           /* Sorting-related */
           void Quicksort(uint32_t left, uint32_t right);
-          bool Sort();
+          void GPUSort(uint32_t num);
+          bool Sort(bool use_gpu = false);
 
         private:
           static const uint32_t kMaximumElements;

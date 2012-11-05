@@ -215,7 +215,7 @@ namespace gpucbt {
     }
 
     bool Node::sortBuffer() {
-        bool ret = buffer_.Sort();
+        bool ret = buffer_.Sort(/*use_gpu = */true);
         return ret;
     }
 

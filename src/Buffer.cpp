@@ -27,8 +27,6 @@
 #include <unistd.h>
 #include <sstream>
 #include "Buffer.h"
-// #include "compsort.h"
-// #include "rle.h"
 #include "snappy.h"
 
 namespace gpucbt {
@@ -161,13 +159,17 @@ namespace gpucbt {
     }
 
     // Sorting-related
-    bool Buffer::Sort() {
+    bool Buffer::Sort(bool use_gpu) {
         if (empty())
             return true;
 
         uint32_t num = num_elements();
-        // quicksort elements
-        Quicksort(0, num - 1);
+        // sort elements
+        if (use_gpu) {
+            GPUSort(num);
+        } else {
+            Quicksort(0, num - 1);
+        }
         return true;
     }
 }

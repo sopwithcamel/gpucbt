@@ -14,7 +14,11 @@
 
 import os.path
 
-env = Environment()
+try:
+    Import('env')
+except:
+    exec open("build-env.py")
+    env = Environment()
 
 # Utility productions
 def Utility(target, source, action):
@@ -23,13 +27,13 @@ def Utility(target, source, action):
     env.Precious(target)
     return target
 
-src_files = [Glob('src/*.cpp'), Glob('util/*.cpp'), Glob('common/*.cpp')]
+src_files = [Glob('src/*.cpp'), Glob('util/*.cpp'), Glob('common/*.cpp'), Glob('src/*.cu')]
 cbt_install_headers = Glob('src/*.h')
 prefix = '/usr/local'
 
-env.Append(CCFLAGS = ['-g','-O2','-Wall'],
-            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon'])
+env.Append(CCFLAGS = ['-g','-O2','-Wall'])
 cbtlib = env.SharedLibrary('gpucbt', src_files,
+            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
             LIBS = ['-ljemalloc'])
 
 test_files = ['test/test.pb.cc', 'test/testCBT.cpp']
