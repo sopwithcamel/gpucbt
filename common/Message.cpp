@@ -26,12 +26,6 @@
 #include "Message.h"
 
 namespace gpucbt {
-    Message::Message() {
-    }
-
-    Message::~Message() {
-    }
-
     void Message::Merge(const Message& msg) {
     }
 

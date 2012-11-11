@@ -30,8 +30,8 @@
 namespace gpucbt {
     class Message {
       public:
-        Message();
-        __host__ __device__ ~Message();
+        Message() {}
+        __host__ __device__ ~Message() {}
         uint32_t hash() const {
             return hash_;
         }
