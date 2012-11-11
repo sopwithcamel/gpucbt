@@ -20,5 +20,5 @@
 
 # Binaries
 test/testcbt
-service/cbtserver
-service/cbtclient
+service/gpucbtserver
+service/gpucbtclient
