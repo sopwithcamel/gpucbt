@@ -34,6 +34,7 @@ prefix = '/usr/local'
 env.Append(CCFLAGS = ['-g','-O2','-Wall'])
 cbtlib = env.SharedLibrary('gpucbt', src_files,
             CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
+            LIBPATH = ['-L/usr/lib/nvidia-current', '-L/usr/local/cuda/lib64'],
             LIBS = ['-ljemalloc'])
 
 test_files = ['test/test.pb.cc', 'test/testCBT.cpp']
@@ -42,11 +43,15 @@ testapp = env.Program('test/testcbt', test_files,
 
 client_files = ['service/Client.cpp', env.Object('common/Message.cpp'), env.Object('util/HashUtil.cpp')]
 client_app = env.Program('service/gpucbtclient', client_files,
+            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
+            LIBPATH = ['-L.'],
             LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-ldl'])
 
 server_files = ['service/Server.cpp', env.Object('common/Message.cpp')]
 server_app = env.Program('service/gpucbtserver', server_files,
-            LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-lpthread', '-lgflags', '-ljemalloc', '-ldl'])
+            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
+            LIBPATH = ['-L.', '-L/usr/lib/nvidia-current', '-L/usr/local/cuda/lib64'],
+            LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-lpthread', '-lgflags', '-ljemalloc', '-ldl', '-lcudart', '-lcuda'])
 
 ## Targets
 # build targets
