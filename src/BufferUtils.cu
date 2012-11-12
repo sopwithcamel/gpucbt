@@ -13,8 +13,6 @@ namespace gpucbt {
         // initialize host vector
         thrust::device_vector<Message> d(messages_, messages_ + num);
 
-        // copy over vector to gpu
-//        thrust::device_vector<Message> d = h;
         try {
             thrust::sort(d.begin(), d.end());
         } catch(std::bad_alloc &e) {
@@ -23,5 +21,9 @@ namespace gpucbt {
         }
 
         thrust::copy(d.begin(), d.end(), messages_);
+    }
+
+    bool Buffer::GPUAggregate() {
+        return false;
     }
 }

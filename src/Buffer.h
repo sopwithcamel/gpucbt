@@ -57,10 +57,12 @@ namespace gpucbt {
           /* Sorting-related */
           void Quicksort(uint32_t left, uint32_t right);
           void GPUSort(uint32_t num);
-          bool Sort(bool use_gpu = true);
+          bool Sort(bool use_gpu = false);
 
           /* Aggregation-related */
-          bool Aggregate();
+          bool Aggregate(bool use_gpu = false);
+          bool CPUAggregate();
+          bool GPUAggregate();
 
         private:
           static const uint32_t kMaximumElements;

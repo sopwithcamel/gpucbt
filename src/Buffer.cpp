@@ -173,7 +173,17 @@ namespace gpucbt {
         return true;
     }
 
-    bool Buffer::Aggregate() {
+    bool Buffer::Aggregate(bool use_gpu) {
+        bool ret;
+        if (use_gpu) {
+            ret = GPUAggregate();
+        } else {
+            ret = CPUAggregate();
+        }
+        return ret;
+    }
+
+    bool Buffer::CPUAggregate() {
         // initialize auxiliary buffer
         Buffer aux;
 
