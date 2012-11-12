@@ -220,42 +220,8 @@ namespace gpucbt {
     }
 
     bool Node::aggregateSortedBuffer() {
-        // initialize auxiliary buffer
-        Buffer aux;
-
-        // aggregate elements in buffer
-        uint32_t lastIndex = 0;
-        uint32_t aggregatedIndex = 0;
-        uint32_t num = buffer_.num_elements();
-        for (uint32_t i = 1; i < num; ++i) {
-            if (buffer_.messages_[i].hash() ==
-                    buffer_.messages_[lastIndex].hash()) {
-                // aggregate elements
-                if (buffer_.messages_[i].SameKey(
-                            buffer_.messages_[lastIndex])) {
-                    buffer_.messages_[lastIndex].Merge(buffer_.messages_[i]);
-                    continue;
-                }
-            }
-
-            // we found a Message with a different key than that in
-            // messages_[lastIndex]. Therefore we store the latter and update
-            // lastIndex
-            aux.messages_[aggregatedIndex] = buffer_.messages_[lastIndex];
-            ++aggregatedIndex;
-            lastIndex = i;
-        }
-        // copy the last Message;
-        aux.messages_[aggregatedIndex] = buffer_.messages_[lastIndex];
-        aggregatedIndex++;
-
-        buffer_.Deallocate();
-        buffer_.messages_ = aux.messages_;
-        buffer_.set_num_elements(aggregatedIndex);
-
-        // Clear aux to prevent deallocation on destruction
-        aux.Clear();
-        return true;
+        bool ret = buffer_.Aggregate();
+        return ret;
     }
 
     /* A leaf is split by moving half the elements of the buffer into a

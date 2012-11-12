@@ -32,8 +32,8 @@
 namespace gpucbt {
     class CompressTree;
 
-    const uint32_t Buffer::kMaximumElements = 16000000;
-    const uint32_t Buffer::kEmptyThreshold = 8000000;
+    const uint32_t Buffer::kMaximumElements = 10000000;
+    const uint32_t Buffer::kEmptyThreshold = 5000000;
 
     Buffer::Buffer() :
             messages_(NULL),
@@ -170,6 +170,45 @@ namespace gpucbt {
         } else {
             Quicksort(0, num - 1);
         }
+        return true;
+    }
+
+    bool Buffer::Aggregate() {
+        // initialize auxiliary buffer
+        Buffer aux;
+
+        // aggregate elements in buffer
+        uint32_t lastIndex = 0;
+        uint32_t aggregatedIndex = 0;
+        uint32_t num = num_elements();
+        for (uint32_t i = 1; i < num; ++i) {
+            if (messages_[i].hash() ==
+                    messages_[lastIndex].hash()) {
+                // aggregate elements
+                if (messages_[i].SameKey(
+                            messages_[lastIndex])) {
+                    messages_[lastIndex].Merge(messages_[i]);
+                    continue;
+                }
+            }
+
+            // we found a Message with a different key than that in
+            // messages_[lastIndex]. Therefore we store the latter and update
+            // lastIndex
+            aux.messages_[aggregatedIndex] = messages_[lastIndex];
+            ++aggregatedIndex;
+            lastIndex = i;
+        }
+        // copy the last Message;
+        aux.messages_[aggregatedIndex] = messages_[lastIndex];
+        aggregatedIndex++;
+
+        Deallocate();
+        messages_ = aux.messages_;
+        set_num_elements(aggregatedIndex);
+
+        // Clear aux to prevent deallocation on destruction
+        aux.Clear();
         return true;
     }
 }

@@ -59,6 +59,9 @@ namespace gpucbt {
           void GPUSort(uint32_t num);
           bool Sort(bool use_gpu = true);
 
+          /* Aggregation-related */
+          bool Aggregate();
+
         private:
           static const uint32_t kMaximumElements;
           static const uint32_t kEmptyThreshold;
