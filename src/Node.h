@@ -61,7 +61,7 @@ namespace gpucbt {
         ~Node();
         /* copy user data into buffer. Buffer should be decompressed
            before calling. */
-        bool insert(const Message& msg);
+        bool insert(const MessageHash& hash, const Message& msg);
 
         // identification functions
         bool isLeaf() const;

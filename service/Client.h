@@ -31,7 +31,6 @@
 #include "Message.h"
 
 namespace gpucbtservice {
-
     class CBTClient {
       public:
         CBTClient(uint32_t u, uint32_t l);
@@ -51,7 +50,8 @@ namespace gpucbtservice {
         }
 
         void GenerateFillers(uint32_t filler_len);
-        void GenerateMessages(gpucbt::Message* msgs, uint32_t number_of_paos);
+        void GenerateMessages(gpucbt::Message* msgs,
+                gpucbt::MessageHash* hashes, uint32_t number_of_paos);
 
         // dataset generation
         std::vector<char*> fillers_;

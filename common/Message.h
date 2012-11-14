@@ -32,12 +32,6 @@ namespace gpucbt {
       public:
         Message() {}
         __host__ __device__ ~Message() {}
-        uint32_t hash() const {
-            return hash_;
-        }
-        void set_hash(const uint32_t hash) {
-            hash_ = hash;
-        }
         const char* key() const {
             return key_;
         }
@@ -52,14 +46,33 @@ namespace gpucbt {
         }
         void Merge(const Message& msg);
         bool SameKey(const Message& msg);
-
-        __host__ __device__ bool operator<(const Message& rhs) const {
-            return (hash_ < rhs.hash_);
-        }
       private:
-        uint32_t hash_;
         char key_[16];
         uint64_t value_;
+    };
+
+    class MessageHash {
+      public:
+        uint32_t hash() const {
+            return hash_;
+        }
+        void set_hash(const uint32_t hash) {
+            hash_ = hash;
+        }
+        __host__ __device__ bool operator<(const MessageHash& rhs) const {
+            return (hash_ < rhs.hash_);
+        }
+        bool operator>(const MessageHash& rhs) const { return (hash_ > rhs.hash_); }
+        bool operator<=(const MessageHash& rhs) const { return (hash_ <= rhs.hash_); }
+        bool operator>=(const MessageHash& rhs) const { return (hash_ >= rhs.hash_); }
+        bool operator==(const MessageHash& rhs) const { return (hash_ == rhs.hash_); }
+        bool operator<(uint32_t rhs) const { return (hash_ < rhs); }
+        bool operator>(uint32_t rhs) const { return (hash_ > rhs); }
+        bool operator<=(uint32_t rhs) const { return (hash_ <= rhs); }
+        bool operator>=(uint32_t rhs) const { return (hash_ >= rhs); }
+        bool operator==(uint32_t rhs) const { return (hash_ == rhs); }
+      private:
+        uint32_t hash_;
     };
 }  // gpucbt
 

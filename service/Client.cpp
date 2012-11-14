@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #include <zmq.hpp>
-#include "zhelpers.hpp"
+#include "Util.h"
 #include <string>
 #include <iostream>
 
@@ -68,21 +68,34 @@ namespace gpucbtservice {
         for (int request_nbr = 0; ; request_nbr++) {
             std::stringstream ss;
             gpucbt::Message* msgs = new gpucbt::Message[number_of_paos];
-            GenerateMessages(msgs, number_of_paos);
+            gpucbt::MessageHash* hashes = new gpucbt::MessageHash[number_of_paos];
+            GenerateMessages(msgs, hashes, number_of_paos);
     
-            uint32_t msg_size = sizeof(gpucbt::Message) * number_of_paos;
-            zmq::message_t request(msg_size);
-            memcpy((void*)request.data(), (void*)msgs, msg_size);
+            uint32_t hash_size = sizeof(gpucbt::MessageHash) * number_of_paos;
+            zmq::message_t hash_request(hash_size);
+            memcpy((void*)hash_request.data(), (void*)hashes, hash_size);
 
-//            std::cout << "Sending " << request.size() << " sized message" << std::endl;
-            socket.send(request);
-
-            delete[] msgs;
+//            std::cout << "Sending " << hash_request.size() << " sized message" << std::endl;
+            socket.send(hash_request);
 
             //  Get the reply.
             zmq::message_t reply;
             socket.recv(&reply);
             assert(!strcmp(reinterpret_cast<char*>(reply.data()), "True"));
+    
+            uint32_t msg_size = sizeof(gpucbt::Message) * number_of_paos;
+            zmq::message_t msg_request(msg_size);
+            memcpy((void*)msg_request.data(), (void*)msgs, msg_size);
+
+//            std::cout << "Sending " << msg_request.size() << " sized message" << std::endl;
+            socket.send(msg_request);
+
+            //  Get the reply.
+            socket.recv(&reply);
+            assert(!strcmp(reinterpret_cast<char*>(reply.data()), "True"));
+
+            delete[] msgs;
+            delete[] hashes;
         }
     }
 
@@ -97,6 +110,7 @@ namespace gpucbtservice {
     }
 
     void CBTClient::GenerateMessages(gpucbt::Message* msgs,
+            gpucbt::MessageHash* hashes,
             uint32_t number_of_paos) {
         char* word = new char[kKeyLen + 1];
         assert(number_of_paos < kMaxMessages);
@@ -111,7 +125,7 @@ namespace gpucbtservice {
 
             strncat(word, fillers_[filler_number], kKeyLen -
                     num_full_loops_ - 1);
-            msgs[i].set_hash(hash);
+            hashes[i].set_hash(hash);
             msgs[i].set_key(word, kKeyLen); 
             msgs[i].set_value(1);
         }

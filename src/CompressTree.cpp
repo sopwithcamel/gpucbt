@@ -51,7 +51,8 @@ namespace gpucbt {
         pthread_barrier_destroy(&threadsBarrier_);
     }
 
-    bool CompressTree::bulk_insert(const Message* msgs, uint64_t num) {
+    bool CompressTree::bulk_insert(const MessageHash* hashes,
+            const Message* msgs, uint64_t num) {
         bool ret = true;
         // copy buf into root node buffer
         // root node buffer always decompressed
@@ -73,13 +74,13 @@ namespace gpucbt {
                         inputNode_->id());
 #endif  // CT_NODE_DEBUG
             }
-            ret &= inputNode_->insert(msgs[i]);
+            ret &= inputNode_->insert(hashes[i], msgs[i]);
         }
         return ret;
     }
 
-    bool CompressTree::insert(const Message& msg) {
-        bool ret = bulk_insert(&msg, 1);
+    bool CompressTree::insert(const MessageHash& hash, const Message& msg) {
+        bool ret = bulk_insert(&hash, &msg, 1);
         return ret;
     }
 

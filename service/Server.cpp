@@ -32,13 +32,13 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <zmq.hpp>
-#include "zhelpers.hpp"
 #include <string>
 #include <iostream>
 
 #include "CompressTree.h"
 #include "Message.h"
 #include "Server.h"
+#include "Util.h"
 
 using namespace google::protobuf::io;
 using namespace std;
@@ -102,12 +102,23 @@ namespace gpucbtservice {
             bool ret;
 
             //  Wait for next request from client
-            zmq::message_t request;
-            socket.recv(&request);
+            zmq::message_t hash_request;
+            socket.recv(&hash_request);
+            uint32_t num_received_messages = hash_request.size() /
+                    sizeof(uint32_t);
+            //  Send reply back to client
+            zmq::message_t reply (5);
+            memcpy((void *)reply.data(), "True", 4);
+            socket.send(reply);
 
-            uint32_t num_received_messages = request.size() /
-                    sizeof(gpucbt::Message);
-            ret = HandleMessage((gpucbt::Message*)request.data(),
+            zmq::message_t msg_request;
+            socket.recv(&msg_request);
+
+            //  Send reply back to client
+            socket.send(reply);
+
+            ret = HandleMessage((gpucbt::MessageHash*)hash_request.data(),
+                    (gpucbt::Message*)msg_request.data(),
                     num_received_messages);
 //            std::cout << "Recvd. " << request.size() << " sized message" << std::endl;
     
@@ -117,21 +128,18 @@ namespace gpucbtservice {
             } else {
                 printf("ERROR\n");
             }
-                
-            //  Send reply back to client
-            zmq::message_t reply (5);
-            memcpy((void *)reply.data(), ret? "True" : "False", 5);
-            socket.send(reply);
         }
     }
 
-    bool CBTServer::HandleMessage(const gpucbt::Message* recv_msgs,
+    bool CBTServer::HandleMessage(const gpucbt::MessageHash* recv_hashes,
+            const gpucbt::Message* recv_msgs,
             uint32_t num_messages) {
         uint32_t rem = num_messages;
         while (rem > 0) {
             uint32_t ins = (rem < kMessagesInsertAtTime?
                     rem : kMessagesInsertAtTime);
-            assert(cbt_->bulk_insert(recv_msgs + (num_messages - rem), ins));
+            assert(cbt_->bulk_insert(recv_hashes + (num_messages - rem),
+                    recv_msgs + (num_messages - rem), ins));
             rem -= ins;
         }
 

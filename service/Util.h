@@ -43,6 +43,8 @@
 #include <stdarg.h>
 #include <signal.h>
 
+#include "Message.h"
+
 //  Receive 0MQ string from socket and convert into string
 static std::string
 s_recv (zmq::socket_t & socket) {
@@ -64,5 +66,15 @@ s_send (zmq::socket_t & socket, const std::string & string) {
     return (rc);
 }
 
+class Request {
+    public:
+        Request() : msgs(), hashes(), num_msgs() {}
+        explicit Request(gpucbt::Message* m, gpucbt::MessageHash* h, 
+                uint32_t n) : msgs(m), hashes(h), num_msgs(n) {
+        }
+        gpucbt::Message* msgs;
+        gpucbt::MessageHash* hashes;
+        uint32_t num_msgs;
+};
 
 #endif

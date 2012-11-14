@@ -39,6 +39,7 @@ namespace gpucbt {
             messages_(NULL),
             num_elements_(0) {
         messages_ = new Message[kMaximumElements];
+        hashes_ = new MessageHash[kMaximumElements];
     }
 
     Buffer::~Buffer() {
@@ -67,13 +68,16 @@ namespace gpucbt {
 
     void Buffer::Clear() {
         messages_ = NULL;
+        hashes_ = NULL;
         set_num_elements(0);
     }
 
     void Buffer::Deallocate() {
         if (messages_) {
             delete[] messages_;
+            delete[] hashes_;
             messages_ = NULL;
+            hashes_ = NULL;
         }
         set_num_elements(0);
     }
@@ -87,20 +91,25 @@ namespace gpucbt {
         Message swap, temp;
         Message* arr = messages_;
 
+        MessageHash swh, tmph;
+
         while (true) {
             if (right - left <= 7) {
                 for (j = left + 1; j <= right; j++) {
                     swap = arr[j];
+                    swh = hashes_[j];
                     i = j - 1;
                     if (i < 0) {
                         fprintf(stderr, "Noo");
                         assert(false);
                     }
-                    while (i >= left && (arr[i].hash() > swap.hash())) {
+                    while (i >= left && (hashes_[i] > swh)) {
                         arr[i + 1] = arr[i];
+                        hashes_[i + 1] = hashes_[i];
                         i--;
                     }
                     arr[i + 1] = swap;
+                    hashes_[i + 1] = swh;
                 }
                 if (stack_pointer == -1) {
                     break;
@@ -116,34 +125,60 @@ namespace gpucbt {
                 arr[median] = arr[i];
                 arr[i] = swap;
 
-                if (arr[left].hash() > arr[right].hash()) {
+                swh = hashes_[median];
+                hashes_[median] = hashes_[i];
+                hashes_[i] = swh;
+
+                if (hashes_[left] > hashes_[right]) {
                     swap = arr[left];
                     arr[left] = arr[right];
                     arr[right] = swap;
+
+                    swh = hashes_[left];
+                    hashes_[left] = hashes_[right];
+                    hashes_[right] = swh;
                 }
-                if (arr[i].hash() > arr[right].hash()) {
+                if (hashes_[i] > hashes_[right]) {
                     swap = arr[i];
                     arr[i] = arr[right];
                     arr[right] = swap;
+
+                    swh = hashes_[i];
+                    hashes_[i] = hashes_[right];
+                    hashes_[right] = swh;
                 }
-                if (arr[left].hash() > arr[i].hash()) {
+                if (hashes_[left] > hashes_[i]) {
                     swap = arr[left];
                     arr[left] = arr[i];
                     arr[i] = swap;
+
+                    swh = hashes_[left];
+                    hashes_[left] = hashes_[i];
+                    hashes_[i] = swh;
                 }
                 temp = arr[i];
+                tmph = hashes_[i];
+
                 while (true) {
-                    while (arr[++i].hash() < temp.hash());
-                    while (arr[--j].hash() > temp.hash());
+                    while (hashes_[++i] < tmph);
+                    while (hashes_[--j] > tmph);
                     if (j < i) {
                         break;
                     }
                     swap = arr[i];
                     arr[i] = arr[j];
                     arr[j] = swap;
+
+                    swh = hashes_[i];
+                    hashes_[i] = hashes_[j];
+                    hashes_[j] = swh;
                 }
                 arr[left + 1] = arr[j];
                 arr[j] = temp;
+
+                hashes_[left + 1] = hashes_[j];
+                hashes_[j] = tmph;
+
                 if (right - i + 1 >= j - left) {
                     rstack[++stack_pointer] = i;
                     rstack[++stack_pointer] = right;
@@ -192,8 +227,7 @@ namespace gpucbt {
         uint32_t aggregatedIndex = 0;
         uint32_t num = num_elements();
         for (uint32_t i = 1; i < num; ++i) {
-            if (messages_[i].hash() ==
-                    messages_[lastIndex].hash()) {
+            if (hashes_[i] == hashes_[lastIndex]) {
                 // aggregate elements
                 if (messages_[i].SameKey(
                             messages_[lastIndex])) {
@@ -206,15 +240,18 @@ namespace gpucbt {
             // messages_[lastIndex]. Therefore we store the latter and update
             // lastIndex
             aux.messages_[aggregatedIndex] = messages_[lastIndex];
+            aux.hashes_[aggregatedIndex] = hashes_[lastIndex];
             ++aggregatedIndex;
             lastIndex = i;
         }
         // copy the last Message;
         aux.messages_[aggregatedIndex] = messages_[lastIndex];
+        aux.hashes_[aggregatedIndex] = hashes_[lastIndex];
         aggregatedIndex++;
 
         Deallocate();
         messages_ = aux.messages_;
+        hashes_ = aux.hashes_;
         set_num_elements(aggregatedIndex);
 
         // Clear aux to prevent deallocation on destruction

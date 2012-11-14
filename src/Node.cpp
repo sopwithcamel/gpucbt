@@ -67,9 +67,10 @@ namespace gpucbt {
 
     }
 
-    bool Node::insert(const Message& msg) {
+    bool Node::insert(const MessageHash& hash, const Message& msg) {
         // copy into Buffer fields
         uint32_t n = buffer_.num_elements();
+        buffer_.hashes_[n] = hash;
         buffer_.messages_[n] = msg;
         buffer_.set_num_elements(n + 1);
         return true;
@@ -127,7 +128,7 @@ namespace gpucbt {
             }
         } else {
             // find the first separator strictly greater than the first element
-            while (buffer_.messages_[curElement].hash() >=
+            while (buffer_.hashes_[curElement] >=
                     children_[curChild]->separator_) {
                 children_[curChild]->EmptyIfNecessary();
                 curChild++;
@@ -145,12 +146,12 @@ namespace gpucbt {
             fprintf(stderr, "Node: %d: first node chosen: %d (sep: %u, \
                 child: %d); first element: %u\n", id_, children_[curChild]->id_,
                     children_[curChild]->separator_, curChild,
-                    buffer_.messages_[0].hash());
+                    buffer_.hashes_[0].hash());
 #endif
             uint32_t num = buffer_.num_elements();
 
             while (curElement < num) {
-                if (buffer_.messages_[curElement].hash() >=
+                if (buffer_.hashes_[curElement] >=
                         children_[curChild]->separator_) {
                     /* this separator is the largest separator that is not greater
                      * than *curHash. This invariant needs to be maintained.
@@ -167,7 +168,7 @@ namespace gpucbt {
                         lastElement = curElement;
                     }
                     // skip past all separators not greater than current hash
-                    while (buffer_.messages_[curElement].hash() >=
+                    while (buffer_.hashes_[curElement] >=
                             children_[curChild]->separator_) {
                         children_[curChild]->EmptyIfNecessary();
                         curChild++;
@@ -231,8 +232,8 @@ namespace gpucbt {
         // select splitting index
         uint32_t num = buffer_.num_elements();
         uint32_t splitIndex = num / 2;
-        while (buffer_.messages_[splitIndex].hash() ==
-                buffer_.messages_[splitIndex - 1].hash()) {
+        while (buffer_.hashes_[splitIndex] ==
+                buffer_.hashes_[splitIndex - 1]) {
             splitIndex++;
 #ifdef ENABLE_ASSERT_CHECKS
             if (splitIndex == num) {
@@ -251,7 +252,7 @@ namespace gpucbt {
 
         Buffer temp;
         CopyFromBuffer(temp, 0, splitIndex);
-        separator_ = buffer_.messages_[splitIndex].hash();
+        separator_ = buffer_.hashes_[splitIndex].hash();
 
         // deallocate the old buffer
         buffer_.Deallocate();
