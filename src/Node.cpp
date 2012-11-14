@@ -258,6 +258,7 @@ namespace gpucbt {
         buffer_.Deallocate();
 
         buffer_.messages_ = temp.messages_;
+        buffer_.hashes_ = temp.hashes_;
         buffer_.set_num_elements(temp.num_elements());
         // Clear temp to prevent automatic deallocation
         temp.Clear();
@@ -290,6 +291,8 @@ namespace gpucbt {
 #endif
         memmove(&dest_buffer.messages_[dest_num], &buffer_.messages_[index],
                 num * sizeof(Message));
+        memmove(&dest_buffer.hashes_[dest_num], &buffer_.hashes_[index],
+                num * sizeof(MessageHash));
         dest_buffer.set_num_elements(dest_num + num);
         return true;
     }

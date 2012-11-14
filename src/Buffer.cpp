@@ -37,6 +37,7 @@ namespace gpucbt {
 
     Buffer::Buffer() :
             messages_(NULL),
+            hashes_(NULL),
             num_elements_(0) {
         messages_ = new Message[kMaximumElements];
         hashes_ = new MessageHash[kMaximumElements];
