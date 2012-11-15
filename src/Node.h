@@ -91,7 +91,7 @@ namespace gpucbt {
         bool emptyBuffer();
         /* Sort the root buffer based on hash value. All other nodes can
          * aggregating by merging. */
-        bool sortBuffer();
+        bool sortBuffer(bool use_gpu);
         /* Aggregate the sorted root buffer */
         bool aggregateSortedBuffer();
         /* copy contents from node's buffer into this buffer. Starting from

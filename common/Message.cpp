@@ -27,6 +27,7 @@
 
 namespace gpucbt {
     void Message::Merge(const Message& msg) {
+        value_ += msg.value_;
     }
 
     bool Message::SameKey(const Message& msg) {

@@ -215,8 +215,8 @@ namespace gpucbt {
         return true;
     }
 
-    bool Node::sortBuffer() {
-        bool ret = buffer_.Sort(/*use_gpu = */true);
+    bool Node::sortBuffer(bool use_gpu) {
+        bool ret = buffer_.Sort(use_gpu);
         return ret;
     }
 
@@ -505,8 +505,10 @@ namespace gpucbt {
             case SORT:
             case MERGE:
                 {
-                    sortBuffer();
-                    aggregateSortedBuffer();
+                    bool use_gpu = true;
+                    sortBuffer(use_gpu);
+                    if (!use_gpu)
+                        aggregateSortedBuffer();
                 }
                 break;
             case EMPTY:
