@@ -102,25 +102,19 @@ namespace gpucbtservice {
             bool ret;
 
             //  Wait for next request from client
-            zmq::message_t hash_request;
-            socket.recv(&hash_request);
-            uint32_t num_received_messages = hash_request.size() /
-                    sizeof(uint32_t);
+            zmq::message_t request;
+            socket.recv(&request);
+            uint32_t num_received_messages = request.size() /
+                    (sizeof(gpucbt::Message) + sizeof(gpucbt::MessageHash));
+
+            gpucbt::MessageHash* h = (gpucbt::MessageHash*)request.data();
+            gpucbt::Message* m = (gpucbt::Message*)(h + num_received_messages);
+            ret = HandleMessage(h, m , num_received_messages);
+//            std::cout << "Recvd. " << request.size() << " sized message" << std::endl;
             //  Send reply back to client
-            zmq::message_t reply (5);
+            zmq::message_t reply(5);
             memcpy((void *)reply.data(), "True", 4);
             socket.send(reply);
-
-            zmq::message_t msg_request;
-            socket.recv(&msg_request);
-
-            //  Send reply back to client
-            socket.send(reply);
-
-            ret = HandleMessage((gpucbt::MessageHash*)hash_request.data(),
-                    (gpucbt::Message*)msg_request.data(),
-                    num_received_messages);
-//            std::cout << "Recvd. " << request.size() << " sized message" << std::endl;
     
             if (ret) {
                 total_messages_inserted_ += num_received_messages;

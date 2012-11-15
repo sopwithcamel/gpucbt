@@ -72,28 +72,18 @@ namespace gpucbtservice {
             GenerateMessages(msgs, hashes, number_of_paos);
     
             uint32_t hash_size = sizeof(gpucbt::MessageHash) * number_of_paos;
-            zmq::message_t hash_request(hash_size);
-            memcpy((void*)hash_request.data(), (void*)hashes, hash_size);
+            uint32_t msg_size = sizeof(gpucbt::Message) * number_of_paos;
 
-//            std::cout << "Sending " << hash_request.size() << " sized message" << std::endl;
-            socket.send(hash_request);
+            zmq::message_t request(hash_size + msg_size);
+            memcpy((void*)request.data(), (void*)hashes, hash_size);
+            memcpy((void*)(request.data() + hash_size), (void*)msgs, msg_size);
+            socket.send(request);
 
             //  Get the reply.
             zmq::message_t reply;
             socket.recv(&reply);
             assert(!strcmp(reinterpret_cast<char*>(reply.data()), "True"));
     
-            uint32_t msg_size = sizeof(gpucbt::Message) * number_of_paos;
-            zmq::message_t msg_request(msg_size);
-            memcpy((void*)msg_request.data(), (void*)msgs, msg_size);
-
-//            std::cout << "Sending " << msg_request.size() << " sized message" << std::endl;
-            socket.send(msg_request);
-
-            //  Get the reply.
-            socket.recv(&reply);
-            assert(!strcmp(reinterpret_cast<char*>(reply.data()), "True"));
-
             delete[] msgs;
             delete[] hashes;
         }
