@@ -505,7 +505,7 @@ namespace gpucbt {
             case SORT:
             case MERGE:
                 {
-                    bool use_gpu = true;
+                    bool use_gpu = id() % 2 == 0? true : false;
                     sortBuffer(use_gpu);
                     if (!use_gpu)
                         aggregateSortedBuffer();
