@@ -32,8 +32,8 @@
 namespace gpucbt {
     class CompressTree;
 
-    const uint32_t Buffer::kMaximumElements = 10000000;
-    const uint32_t Buffer::kEmptyThreshold = 5000000;
+    const uint32_t Buffer::kMaximumElements = 80000000;
+    const uint32_t Buffer::kEmptyThreshold = 40000000;
 
     Buffer::Buffer() :
             messages_(NULL),
