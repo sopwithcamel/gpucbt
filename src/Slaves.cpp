@@ -99,9 +99,6 @@ namespace gpucbt {
             if (temp & 1)
                 break;
         }
-        if (next > 0) {  // sleeping thread found, so set as awake
-            tmask_ &= ~(1 << (next - 1));
-        }
         pthread_spin_unlock(&maskLock_);
 
         // wake up thread
@@ -112,11 +109,36 @@ namespace gpucbt {
         }
     }
 
-    inline void Slave::setThreadSleep(uint32_t ind) {
+    void Slave::setThreadSleep(uint32_t ind) {
         pthread_spin_lock(&maskLock_);
+
+        // should never block
+        if (getNumberOfSleepingThreads() == numThreads_ - 1) {
+            assert(sem_trywait(&tree_->sleepSemaphore_) == 0);
+        }
+#ifdef CT_NODE_DEBUG
+        int ret;
+        sem_getvalue(&tree_->sleepSemaphore_, &ret);
+        fprintf(stderr, "%s (%d) sleeping [sem: %d]\n",
+                getSlaveName().c_str(), ind, ret);
+#endif  // CT_NODE_DEBUG
+
         tmask_ |= (1 << ind);
         pthread_spin_unlock(&maskLock_);
     }
+
+   
+    void Slave::setThreadAwake(uint32_t ind) {
+        pthread_spin_lock(&maskLock_);
+        // check if all are asleep
+        if (getNumberOfSleepingThreads() == numThreads_) {
+            sem_post(&tree_->sleepSemaphore_);
+        }
+        // set thread as awake
+        tmask_ &= ~(1 << ind );
+        pthread_spin_unlock(&maskLock_);
+    }
+
 
     // TODO: Using a naive method for now
     inline uint32_t Slave::getNumberOfSleepingThreads() {
@@ -191,6 +213,8 @@ namespace gpucbt {
             pthread_mutex_lock(&(me->mutex_));
             pthread_cond_wait(&(me->hasWork_), &(me->mutex_));
             pthread_mutex_unlock(&(me->mutex_));
+
+            setThreadAwake(me->index_);
 
 #ifdef CT_NODE_DEBUG
             fprintf(stderr, "%s (%d) fingered\n", GetSlaveName().c_str(),

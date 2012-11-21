@@ -25,6 +25,7 @@
 #define SRC_COMPRESSTREE_H_
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <deque>
 #include <queue>
 #include <vector>
@@ -96,6 +97,7 @@ namespace gpucbt {
 
         bool allFlush_;
         EmptyType emptyType_;
+        sem_t sleepSemaphore_;
         std::deque<Node*> leavesToBeEmptied_;
         std::vector<Node*> allLeaves_;
         uint32_t lastLeafRead_;

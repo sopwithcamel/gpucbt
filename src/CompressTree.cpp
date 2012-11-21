@@ -43,12 +43,14 @@ namespace gpucbt {
             threadsStarted_(false) {
         pthread_cond_init(&emptyRootAvailable_, NULL);
         pthread_mutex_init(&emptyRootNodesMutex_, NULL);
+        sem_init(&sleepSemaphore_, 0, 2);
     }
 
     CompressTree::~CompressTree() {
         pthread_cond_destroy(&emptyRootAvailable_);
         pthread_mutex_destroy(&emptyRootNodesMutex_);
         pthread_barrier_destroy(&threadsBarrier_);
+        sem_destroy(&sleepSemaphore_);
     }
 
     bool CompressTree::bulk_insert(const MessageHash* hashes,
@@ -118,6 +120,11 @@ namespace gpucbt {
 
         if (lastElement_ >= curLeaf->buffer_.num_elements()) {
             if (++lastLeafRead_ == allLeaves_.size()) {
+                int all_done;                                                            
+                do {                                                                     
+                    usleep(100);                                                         
+                    sem_getvalue(&sleepSemaphore_, &all_done);                           
+                } while (all_done);
 #ifdef CT_NODE_DEBUG
                 fprintf(stderr, "Emptying tree!\n");
 #endif
@@ -173,15 +180,11 @@ namespace gpucbt {
         emptyType_ = ALWAYS;
         inputNode_->schedule(SORT);
 
-        /* wait for all nodes to be sorted and emptied
-           before proceeding */
-        do {
-            merger_->WaitUntilCompletionNoticeReceived();
-            emptier_->WaitUntilCompletionNoticeReceived();
-            compressor_->WaitUntilCompletionNoticeReceived();
-        } while (!merger_->empty() ||
-                !emptier_->empty() ||
-                !compressor_->empty());
+        int all_done;                                                            
+        do {                                                                     
+            usleep(100);                                                         
+            sem_getvalue(&sleepSemaphore_, &all_done);                           
+        } while (all_done);
 
         // add all leaves;
         visitQueue.push_back(rootNode_);

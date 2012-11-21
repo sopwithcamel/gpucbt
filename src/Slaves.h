@@ -108,6 +108,7 @@ namespace gpucbt {
 
         // Thread-mask related functions
         void setThreadSleep(uint32_t index);
+        void setThreadAwake(uint32_t index);
         uint32_t getNumberOfSleepingThreads();
 
 #ifdef CT_NODE_DEBUG
