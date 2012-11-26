@@ -32,10 +32,12 @@ cbt_install_headers = Glob('src/*.h')
 prefix = '/usr/local'
 
 env.Append(CCFLAGS = ['-g','-O2','-Wall'])
+
+# so libgpucbt.so can be found
+env.Append(LIBPATH = ['-L.'])
 cbtlib = env.SharedLibrary('gpucbt', src_files,
-            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
-            LIBPATH = ['-L/usr/lib/nvidia-current', '-L/usr/local/cuda/lib64'],
-            LIBS = ['-ljemalloc'])
+            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon'],
+            LIBS = ['-ljemalloc', '-lcuda', '-lcudart'])
 
 test_files = ['test/test.pb.cc', 'test/testCBT.cpp']
 testapp = env.Program('test/testcbt', test_files,
@@ -43,15 +45,13 @@ testapp = env.Program('test/testcbt', test_files,
 
 client_files = ['service/Client.cpp', env.Object('common/Message.cpp'), env.Object('util/HashUtil.cpp')]
 client_app = env.Program('service/gpucbtclient', client_files,
-            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
-            LIBPATH = ['-L.'],
+            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon'],
             LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-ldl'])
 
 server_files = ['service/Server.cpp', env.Object('common/Message.cpp')]
 server_app = env.Program('service/gpucbtserver', server_files,
-            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon', '-I/usr/local/cuda/include'],
-            LIBPATH = ['-L.', '-L/usr/lib/nvidia-current', '-L/usr/local/cuda/lib64'],
-            LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-lpthread', '-lgflags', '-ljemalloc', '-ldl', '-lcudart', '-lcuda'])
+            CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon'],
+            LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-lpthread', '-lgflags', '-ljemalloc', '-ldl', '-lcudart', '-lcuda', '-lprofiler'])
 
 ## Targets
 # build targets
