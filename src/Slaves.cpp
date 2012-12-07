@@ -44,8 +44,7 @@ namespace gpucbt {
 
     inline bool Slave::empty() {
         pthread_spin_lock(&nodesLock_);
-        bool ret = nodes_.empty() &&
-                (getNumberOfSleepingThreads() == numThreads_);
+        bool ret = nodes_.empty() && allAsleep();
         pthread_spin_unlock(&nodesLock_);
         return ret;
     }
@@ -111,11 +110,6 @@ namespace gpucbt {
 
     void Slave::setThreadSleep(uint32_t ind) {
         pthread_spin_lock(&maskLock_);
-
-        // should never block
-        if (getNumberOfSleepingThreads() == numThreads_ - 1) {
-            assert(sem_trywait(&tree_->sleepSemaphore_) == 0);
-        }
 #ifdef CT_NODE_DEBUG
         int ret;
         sem_getvalue(&tree_->sleepSemaphore_, &ret);
@@ -130,10 +124,6 @@ namespace gpucbt {
    
     void Slave::setThreadAwake(uint32_t ind) {
         pthread_spin_lock(&maskLock_);
-        // check if all are asleep
-        if (getNumberOfSleepingThreads() == numThreads_) {
-            sem_post(&tree_->sleepSemaphore_);
-        }
         // set thread as awake
         tmask_ &= ~(1 << ind );
         pthread_spin_unlock(&maskLock_);
@@ -151,17 +141,11 @@ namespace gpucbt {
         return c; 
     }
 
-    void Slave::checkSendCompletionNotice() {
-        pthread_mutex_lock(&completionMutex_);
-        if (askForCompletionNotice_) {
-            // can signal only if I'm the last thread awake so I check if the
-            // number of sleeping threads is numThreads_ - 1
-            if (getNumberOfSleepingThreads() == (numThreads_ - 1)) {
-                pthread_cond_signal(&complete_);
-                askForCompletionNotice_ = false;
-            }
-        }
-        pthread_mutex_unlock(&completionMutex_);
+    bool Slave::allAsleep() {
+        pthread_spin_lock(&maskLock_);
+        bool ret = (getNumberOfSleepingThreads() == numThreads_);
+        pthread_spin_unlock(&maskLock_);
+        return ret;
     }
 
     inline void Slave::setInputComplete(bool value) {
@@ -198,9 +182,8 @@ namespace gpucbt {
         pthread_barrier_wait(&tree_->threadsBarrier_);
 
         while (!More()) {
-            // check if anybody wants a notification when list is empty
-            checkSendCompletionNotice();
-
+            // should never block
+            assert(sem_trywait(&tree_->sleepSemaphore_) == 0);
 #ifdef CT_NODE_DEBUG
             fprintf(stderr, "%s (%d) sleeping\n", GetSlaveName().c_str(),
                     me->index_);
@@ -214,6 +197,8 @@ namespace gpucbt {
             pthread_cond_wait(&(me->hasWork_), &(me->mutex_));
             pthread_mutex_unlock(&(me->mutex_));
 
+            sem_post(&tree_->sleepSemaphore_);
+    
             setThreadAwake(me->index_);
 
 #ifdef CT_NODE_DEBUG
@@ -366,8 +351,7 @@ namespace gpucbt {
 
     bool Emptier::empty() {
         pthread_spin_lock(&nodesLock_);
-        bool ret = queue_.empty() &&
-                (getNumberOfSleepingThreads() == numThreads_);
+        bool ret = queue_.empty() && allAsleep();
         pthread_spin_unlock(&nodesLock_);
         return ret;
     }

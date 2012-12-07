@@ -43,7 +43,6 @@ namespace gpucbt {
             threadsStarted_(false) {
         pthread_cond_init(&emptyRootAvailable_, NULL);
         pthread_mutex_init(&emptyRootNodesMutex_, NULL);
-        sem_init(&sleepSemaphore_, 0, 2);
     }
 
     CompressTree::~CompressTree() {
@@ -341,6 +340,7 @@ namespace gpucbt {
         threadCount += monitorThreadCount;
 #endif
         pthread_barrier_init(&threadsBarrier_, NULL, threadCount);
+        sem_init(&sleepSemaphore_, 0, threadCount - 1);
 
         sorter_ = new Sorter(this);
         sorter_->StartThreads(sorterThreadCount);

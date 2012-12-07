@@ -95,13 +95,6 @@ namespace gpucbt {
         // AddNode() using getNextNode() and calls Work(). Each of these
         // functions can be specialized
         virtual void slaveRoutine(ThreadStruct* t);
-
-        // check if someone has requested a completion signal.
-        // completion is defined as all threads being asleep
-        // and the queue being empty. This is requested only when
-        // the insertion thread completes input and blocks waiting
-        // for all Slaves to finish.
-        virtual void checkSendCompletionNotice();
         virtual void setInputComplete(bool value);
         bool checkInputComplete();
         virtual void Work(Node* n) = 0;
@@ -110,6 +103,7 @@ namespace gpucbt {
         void setThreadSleep(uint32_t index);
         void setThreadAwake(uint32_t index);
         uint32_t getNumberOfSleepingThreads();
+        bool allAsleep();
 
 #ifdef CT_NODE_DEBUG
         // Debugging
