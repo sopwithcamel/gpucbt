@@ -46,7 +46,7 @@ testapp = env.Program('test/testcbt', test_files,
 client_files = ['service/Client.cpp', env.Object('common/Message.cpp'), env.Object('util/HashUtil.cpp')]
 client_app = env.Program('service/gpucbtclient', client_files,
             CPPFLAGS = ['-Isrc/', '-Iutil/', '-Icommon'],
-            LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-ldl'])
+            LIBS = ['-lprotobuf', '-lgpucbt', '-lsnappy', '-lzmq', '-ldl', '-ljemalloc'])
 
 server_files = ['service/Server.cpp', env.Object('common/Message.cpp')]
 server_app = env.Program('service/gpucbtserver', server_files,

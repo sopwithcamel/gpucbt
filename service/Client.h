@@ -33,7 +33,7 @@
 namespace gpucbtservice {
     class CBTClient {
       public:
-        CBTClient(uint32_t u, uint32_t l);
+        CBTClient(uint32_t u, uint32_t l, uint32_t r);
         ~CBTClient();
         void Run();
 
@@ -41,6 +41,7 @@ namespace gpucbtservice {
         // dataset properties
         const uint32_t kNumUniqKeys;
         const uint32_t kKeyLen;
+        const uint32_t kKeyRepeat;
         const uint32_t kNumFillers;
         const uint32_t kLettersInAlphabet;
         const uint32_t kMaxMessages;

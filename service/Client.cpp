@@ -39,9 +39,10 @@ using namespace google::protobuf::io;
 
 namespace gpucbtservice {
 
-    CBTClient::CBTClient(uint32_t u, uint32_t l) :
+    CBTClient::CBTClient(uint32_t u, uint32_t l, uint32_t r) :
             kNumUniqKeys(u),
             kKeyLen(l),
+            kKeyRepeat(r),
             kNumFillers(10000),
             kLettersInAlphabet(26),
             kMaxMessages(200000) {
@@ -64,8 +65,9 @@ namespace gpucbtservice {
         socket.connect ("tcp://localhost:5555");
 
         uint32_t number_of_paos = 100000;
+        uint32_t tot_requests = (kNumUniqKeys * kKeyRepeat) / number_of_paos;
 
-        for (int request_nbr = 0; ; request_nbr++) {
+        for (int request_nbr = 0; request_nbr < tot_requests; request_nbr++) {
             std::stringstream ss;
             gpucbt::Message* msgs = new gpucbt::Message[number_of_paos];
             gpucbt::MessageHash* hashes = new gpucbt::MessageHash[number_of_paos];
@@ -76,7 +78,7 @@ namespace gpucbtservice {
 
             zmq::message_t request(hash_size + msg_size);
             memcpy((void*)request.data(), (void*)hashes, hash_size);
-            memcpy((void*)(request.data() + hash_size), (void*)msgs, msg_size);
+            memcpy((void*)((char*)request.data() + hash_size), (void*)msgs, msg_size);
             socket.send(request);
 
             //  Get the reply.
@@ -124,20 +126,21 @@ namespace gpucbtservice {
 } // cbtservice
 
 
-#define USAGE "%s <Number of unique keys> <Length of a key>\n"
+#define USAGE "%s <Number of unique keys> <Length of a key> <Repeat>\n"
 
 int main (int argc, char* argv[])
 {
-    if (argc < 3) {
+    if (argc < 4) {
         fprintf(stdout, USAGE, argv[0]);
         exit(EXIT_FAILURE);
     }
 
     uint32_t uniq = atoi(argv[1]);
     uint32_t len = atoi(argv[2]);
+    uint32_t repeat = atoi(argv[3]);
 
     gpucbtservice::CBTClient* client = new gpucbtservice::CBTClient(uniq,
-            len);
+            len, repeat);
     client->Run();
     return 0;
 }
