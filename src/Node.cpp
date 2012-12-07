@@ -503,6 +503,7 @@ namespace gpucbt {
             case MERGE:
                 {
                     clock_t start, finish;
+                    uint64_t num = buffer_.num_elements();
                     start = clock();
                     bool use_gpu = id() % 2 == 0? true : false;
                     sortBuffer(use_gpu);
@@ -510,7 +511,8 @@ namespace gpucbt {
                         aggregateSortedBuffer();
                     finish = clock();
                     double duration = (double)(finish - start) / CLOCKS_PER_SEC;
-                    fprintf(stderr, "%s took %lf\n", use_gpu? "GPU" : "CPU", duration);
+                    fprintf(stderr, "%s took %lf for %ld elements\n",
+                            use_gpu? "GPU" : "CPU", duration, num);
                 }
                 break;
             case EMPTY:
