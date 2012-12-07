@@ -136,8 +136,7 @@ namespace gpucbt {
                 if (curChild >= children_.size()) {
                     fprintf(stderr,
                             "Node: %d: Can't place %u among children\n", id_,
-                            l->hashes_[curElement]);
-                    checkIntegrity();
+                            buffer_.hashes_[curElement]);
                     assert(false);
                 }
 #endif
@@ -203,10 +202,7 @@ namespace gpucbt {
             }
 
             // set buffer as empty
-            if (!isRoot())
-                buffer_.Deallocate();
-            else
-                buffer_.SetEmpty();
+            buffer_.SetEmpty();
         }
         // Split leaves can cause the number of children to increase. Check.
         if (children_.size() > tree_->b_) {
@@ -283,16 +279,17 @@ namespace gpucbt {
             uint32_t num) {
         uint32_t dest_num = dest_buffer.num_elements();
 #ifdef ENABLE_ASSERT_CHECKS
+        assert(dest_buffer.hashes_ != NULL);
         if (dest_num + num >= Buffer::kMaximumElements) {
             fprintf(stderr, "Node: %d, num_elements: %d, num_copied: %d\n",
                     id_, dest_num, num);
             assert(false);
         }
 #endif
-        memmove(&dest_buffer.messages_[dest_num], &buffer_.messages_[index],
-                num * sizeof(Message));
         memmove(&dest_buffer.hashes_[dest_num], &buffer_.hashes_[index],
                 num * sizeof(MessageHash));
+        memmove(&dest_buffer.messages_[dest_num], &buffer_.messages_[index],
+                num * sizeof(Message));
         dest_buffer.set_num_elements(dest_num + num);
         return true;
     }
@@ -380,7 +377,7 @@ namespace gpucbt {
 #endif
 
         if (isRoot()) {
-            buffer_.Deallocate();
+//            buffer_.Deallocate();
             return tree_->CreateNewRoot(newNode);
         } else {
             return parent_->AddChild(newNode);
@@ -505,10 +502,15 @@ namespace gpucbt {
             case SORT:
             case MERGE:
                 {
+                    clock_t start, finish;
+                    start = clock();
                     bool use_gpu = id() % 2 == 0? true : false;
                     sortBuffer(use_gpu);
                     if (!use_gpu)
                         aggregateSortedBuffer();
+                    finish = clock();
+                    double duration = (double)(finish - start) / CLOCKS_PER_SEC;
+                    fprintf(stderr, "%s took %lf\n", use_gpu? "GPU" : "CPU", duration);
                 }
                 break;
             case EMPTY:
