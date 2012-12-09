@@ -71,8 +71,9 @@ namespace gpucbt {
           const Node* node_;
 
           Message* messages_;
-          MessageHash* hashes_;
+          uint32_t* hashes_;
           uint32_t num_elements_;
+          uint32_t* perm_;
     };
 }
 #endif  // SRC_BUFFER_H_

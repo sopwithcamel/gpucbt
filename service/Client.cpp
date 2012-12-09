@@ -70,10 +70,10 @@ namespace gpucbtservice {
         for (int request_nbr = 0; request_nbr < tot_requests; request_nbr++) {
             std::stringstream ss;
             gpucbt::Message* msgs = new gpucbt::Message[number_of_paos];
-            gpucbt::MessageHash* hashes = new gpucbt::MessageHash[number_of_paos];
+            uint32_t* hashes = new uint32_t[number_of_paos];
             GenerateMessages(msgs, hashes, number_of_paos);
     
-            uint32_t hash_size = sizeof(gpucbt::MessageHash) * number_of_paos;
+            uint32_t hash_size = sizeof(uint32_t) * number_of_paos;
             uint32_t msg_size = sizeof(gpucbt::Message) * number_of_paos;
 
             zmq::message_t request(hash_size + msg_size);
@@ -102,8 +102,7 @@ namespace gpucbtservice {
     }
 
     void CBTClient::GenerateMessages(gpucbt::Message* msgs,
-            gpucbt::MessageHash* hashes,
-            uint32_t number_of_paos) {
+            uint32_t* hashes, uint32_t number_of_paos) {
         char* word = new char[kKeyLen + 1];
         assert(number_of_paos < kMaxMessages);
         for (uint32_t i = 0; i < number_of_paos; ++i) {
@@ -117,7 +116,7 @@ namespace gpucbtservice {
 
             strncat(word, fillers_[filler_number], kKeyLen -
                     num_full_loops_ - 1);
-            hashes[i].set_hash(hash);
+            hashes[i] = hash;
             msgs[i].set_key(word, kKeyLen); 
             msgs[i].set_value(1);
         }

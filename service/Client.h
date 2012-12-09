@@ -52,7 +52,7 @@ namespace gpucbtservice {
 
         void GenerateFillers(uint32_t filler_len);
         void GenerateMessages(gpucbt::Message* msgs,
-                gpucbt::MessageHash* hashes, uint32_t number_of_paos);
+                uint32_t* hashes, uint32_t number_of_paos);
 
         // dataset generation
         std::vector<char*> fillers_;

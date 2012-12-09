@@ -59,39 +59,6 @@ namespace gpucbt {
         char key_[16];
         uint64_t value_;
     };
-
-    class MessageHash {
-      public:
-        struct MessageHashComp {
-            __host__ __device__ bool operator()(
-                    const MessageHash& lhs,
-                    const MessageHash& rhs) {
-                return lhs == rhs;
-            }
-        };
-        uint32_t hash() const {
-            return hash_;
-        }
-        void set_hash(const uint32_t hash) {
-            hash_ = hash;
-        }
-        __host__ __device__ bool operator<(const MessageHash& rhs) const {
-            return (hash_ < rhs.hash_);
-        }
-        bool operator>(const MessageHash& rhs) const { return (hash_ > rhs.hash_); }
-        bool operator<=(const MessageHash& rhs) const { return (hash_ <= rhs.hash_); }
-        bool operator>=(const MessageHash& rhs) const { return (hash_ >= rhs.hash_); }
-        __host__ __device__ bool operator==(const MessageHash& rhs) const {
-             return (hash_ == rhs.hash_);
-        }
-        bool operator<(uint32_t rhs) const { return (hash_ < rhs); }
-        bool operator>(uint32_t rhs) const { return (hash_ > rhs); }
-        bool operator<=(uint32_t rhs) const { return (hash_ <= rhs); }
-        bool operator>=(uint32_t rhs) const { return (hash_ >= rhs); }
-        bool operator==(uint32_t rhs) const { return (hash_ == rhs); }
-      private:
-        uint32_t hash_;
-    };
 }  // gpucbt
 
 #endif  // SRC_MESSAGE_H

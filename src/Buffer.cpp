@@ -32,15 +32,15 @@
 namespace gpucbt {
     class CompressTree;
 
-    const uint32_t Buffer::kMaximumElements = 80000000;
-    const uint32_t Buffer::kEmptyThreshold = 40000000;
+    const uint32_t Buffer::kMaximumElements = 10000000;
+    const uint32_t Buffer::kEmptyThreshold = 5000000;
 
     Buffer::Buffer() :
             messages_(NULL),
             hashes_(NULL),
             num_elements_(0) {
         messages_ = new Message[kMaximumElements];
-        hashes_ = new MessageHash[kMaximumElements];
+        hashes_ = new uint32_t[kMaximumElements];
     }
 
     Buffer::~Buffer() {
@@ -89,15 +89,14 @@ namespace gpucbt {
         int32_t right = uright;
         int32_t* rstack = new int32_t[128];
 
-        Message swap, temp;
-        Message* arr = messages_;
+        uint32_t swap, temp;
 
-        MessageHash swh, tmph;
+        uint32_t swh, tmph;
 
         while (true) {
             if (right - left <= 7) {
                 for (j = left + 1; j <= right; j++) {
-                    swap = arr[j];
+                    swap = perm_[j];
                     swh = hashes_[j];
                     i = j - 1;
                     if (i < 0) {
@@ -105,11 +104,11 @@ namespace gpucbt {
                         assert(false);
                     }
                     while (i >= left && (hashes_[i] > swh)) {
-                        arr[i + 1] = arr[i];
+                        perm_[i + 1] = perm_[i];
                         hashes_[i + 1] = hashes_[i];
                         i--;
                     }
-                    arr[i + 1] = swap;
+                    perm_[i + 1] = swap;
                     hashes_[i + 1] = swh;
                 }
                 if (stack_pointer == -1) {
@@ -122,42 +121,42 @@ namespace gpucbt {
                 i = left + 1;
                 j = right;
 
-                swap = arr[median];
-                arr[median] = arr[i];
-                arr[i] = swap;
+                swap = perm_[median];
+                perm_[median] = perm_[i];
+                perm_[i] = swap;
 
                 swh = hashes_[median];
                 hashes_[median] = hashes_[i];
                 hashes_[i] = swh;
 
                 if (hashes_[left] > hashes_[right]) {
-                    swap = arr[left];
-                    arr[left] = arr[right];
-                    arr[right] = swap;
+                    swap = perm_[left];
+                    perm_[left] = perm_[right];
+                    perm_[right] = swap;
 
                     swh = hashes_[left];
                     hashes_[left] = hashes_[right];
                     hashes_[right] = swh;
                 }
                 if (hashes_[i] > hashes_[right]) {
-                    swap = arr[i];
-                    arr[i] = arr[right];
-                    arr[right] = swap;
+                    swap = perm_[i];
+                    perm_[i] = perm_[right];
+                    perm_[right] = swap;
 
                     swh = hashes_[i];
                     hashes_[i] = hashes_[right];
                     hashes_[right] = swh;
                 }
                 if (hashes_[left] > hashes_[i]) {
-                    swap = arr[left];
-                    arr[left] = arr[i];
-                    arr[i] = swap;
+                    swap = perm_[left];
+                    perm_[left] = perm_[i];
+                    perm_[i] = swap;
 
                     swh = hashes_[left];
                     hashes_[left] = hashes_[i];
                     hashes_[i] = swh;
                 }
-                temp = arr[i];
+                temp = perm_[i];
                 tmph = hashes_[i];
 
                 while (true) {
@@ -166,16 +165,16 @@ namespace gpucbt {
                     if (j < i) {
                         break;
                     }
-                    swap = arr[i];
-                    arr[i] = arr[j];
-                    arr[j] = swap;
+                    swap = perm_[i];
+                    perm_[i] = perm_[j];
+                    perm_[j] = swap;
 
                     swh = hashes_[i];
                     hashes_[i] = hashes_[j];
                     hashes_[j] = swh;
                 }
-                arr[left + 1] = arr[j];
-                arr[j] = temp;
+                perm_[left + 1] = perm_[j];
+                perm_[j] = temp;
 
                 hashes_[left + 1] = hashes_[j];
                 hashes_[j] = tmph;
@@ -200,10 +199,15 @@ namespace gpucbt {
             return true;
 
         uint32_t num = num_elements();
+        // allocate space for sequence numbers
+        perm_ = new uint32_t[num];
+
         // sort elements
         if (use_gpu) {
             GPUSort(num);
         } else {
+            for (uint32_t i = 0; i < num; ++i)
+                perm_[i] = i;
             Quicksort(0, num - 1);
         }
         return true;
@@ -211,11 +215,12 @@ namespace gpucbt {
 
     bool Buffer::Aggregate(bool use_gpu) {
         bool ret;
-        if (use_gpu) {
+        if (false/*use_gpu*/) {
             ret = GPUAggregate();
         } else {
             ret = CPUAggregate();
         }
+        delete[] perm_;
         return ret;
     }
 
@@ -230,9 +235,10 @@ namespace gpucbt {
         for (uint32_t i = 1; i < num; ++i) {
             if (hashes_[i] == hashes_[lastIndex]) {
                 // aggregate elements
-                if (messages_[i].SameKey(
-                            messages_[lastIndex])) {
-                    messages_[lastIndex].Merge(messages_[i]);
+                if (messages_[perm_[i]].SameKey(
+                            messages_[perm_[lastIndex]])) {
+                    messages_[perm_[lastIndex]].Merge(
+                            messages_[perm_[i]]);
                     continue;
                 }
             }
@@ -240,13 +246,15 @@ namespace gpucbt {
             // we found a Message with a different key than that in
             // messages_[lastIndex]. Therefore we store the latter and update
             // lastIndex
-            aux.messages_[aggregatedIndex] = messages_[lastIndex];
+            aux.messages_[aggregatedIndex] =
+                    messages_[perm_[lastIndex]];
             aux.hashes_[aggregatedIndex] = hashes_[lastIndex];
             ++aggregatedIndex;
             lastIndex = i;
         }
         // copy the last Message;
-        aux.messages_[aggregatedIndex] = messages_[lastIndex];
+        aux.messages_[aggregatedIndex] =
+                messages_[perm_[lastIndex]];
         aux.hashes_[aggregatedIndex] = hashes_[lastIndex];
         aggregatedIndex++;
 

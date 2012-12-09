@@ -43,6 +43,7 @@ namespace gpucbt {
             threadsStarted_(false) {
         pthread_cond_init(&emptyRootAvailable_, NULL);
         pthread_mutex_init(&emptyRootNodesMutex_, NULL);
+        sem_init(&gpu_in_use_, 0, 1);
     }
 
     CompressTree::~CompressTree() {
@@ -50,9 +51,10 @@ namespace gpucbt {
         pthread_mutex_destroy(&emptyRootNodesMutex_);
         pthread_barrier_destroy(&threadsBarrier_);
         sem_destroy(&sleepSemaphore_);
+        sem_destroy(&gpu_in_use_);
     }
 
-    bool CompressTree::bulk_insert(const MessageHash* hashes,
+    bool CompressTree::bulk_insert(const uint32_t* hashes,
             const Message* msgs, uint64_t num) {
         bool ret = true;
         // copy buf into root node buffer
@@ -80,7 +82,7 @@ namespace gpucbt {
         return ret;
     }
 
-    bool CompressTree::insert(const MessageHash& hash, const Message& msg) {
+    bool CompressTree::insert(const uint32_t& hash, const Message& msg) {
         bool ret = bulk_insert(&hash, &msg, 1);
         return ret;
     }
@@ -328,8 +330,8 @@ namespace gpucbt {
 
         emptyType_ = IF_FULL;
 
-        uint32_t mergerThreadCount = 8;
-        uint32_t emptierThreadCount = 8;
+        uint32_t mergerThreadCount = 4;
+        uint32_t emptierThreadCount = 4;
         uint32_t sorterThreadCount = 2;
 
         // One for the inserter

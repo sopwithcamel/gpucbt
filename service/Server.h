@@ -41,7 +41,7 @@ namespace gpucbtservice {
 
         CBTServer();
         ~CBTServer();
-        bool HandleMessage(const gpucbt::MessageHash* recv_hashes,
+        bool HandleMessage(const uint32_t* recv_hashes,
                 const gpucbt::Message* recv_msgs, 
                 uint32_t num_PAOs);
         void Run();

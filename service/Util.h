@@ -69,11 +69,11 @@ s_send (zmq::socket_t & socket, const std::string & string) {
 class Request {
     public:
         Request() : msgs(), hashes(), num_msgs() {}
-        explicit Request(gpucbt::Message* m, gpucbt::MessageHash* h, 
+        explicit Request(gpucbt::Message* m, uint32_t* h, 
                 uint32_t n) : msgs(m), hashes(h), num_msgs(n) {
         }
         gpucbt::Message* msgs;
-        gpucbt::MessageHash* hashes;
+        uint32_t* hashes;
         uint32_t num_msgs;
 };
 

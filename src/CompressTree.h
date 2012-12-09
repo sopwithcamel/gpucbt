@@ -51,8 +51,8 @@ namespace gpucbt {
         ~CompressTree();
 
         /* Insert record into tree */
-        bool insert(const MessageHash& hash, const Message& agg);
-        bool bulk_insert(const MessageHash* hashes, const Message* paos,
+        bool insert(const uint32_t& hash, const Message& agg);
+        bool bulk_insert(const uint32_t* hashes, const Message* paos,
                 uint64_t num);
         /* read values */
         // returns true if there are more values to be read and false otherwise
@@ -131,6 +131,9 @@ namespace gpucbt {
         /* Monitor */
         Monitor* monitor_;
 #endif
+
+        /* GPU-related */
+        sem_t gpu_in_use_;
     };
 }
 

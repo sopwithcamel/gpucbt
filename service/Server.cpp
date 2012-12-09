@@ -105,9 +105,9 @@ namespace gpucbtservice {
             zmq::message_t request;
             socket.recv(&request);
             uint32_t num_received_messages = request.size() /
-                    (sizeof(gpucbt::Message) + sizeof(gpucbt::MessageHash));
+                    (sizeof(gpucbt::Message) + sizeof(uint32_t));
 
-            gpucbt::MessageHash* h = (gpucbt::MessageHash*)request.data();
+            uint32_t* h = (uint32_t*)request.data();
             gpucbt::Message* m = (gpucbt::Message*)(h + num_received_messages);
             ret = HandleMessage(h, m , num_received_messages);
 //            std::cout << "Recvd. " << request.size() << " sized message" << std::endl;
@@ -125,7 +125,7 @@ namespace gpucbtservice {
         }
     }
 
-    bool CBTServer::HandleMessage(const gpucbt::MessageHash* recv_hashes,
+    bool CBTServer::HandleMessage(const uint32_t* recv_hashes,
             const gpucbt::Message* recv_msgs,
             uint32_t num_messages) {
         uint32_t rem = num_messages;

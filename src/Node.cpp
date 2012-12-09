@@ -67,7 +67,7 @@ namespace gpucbt {
 
     }
 
-    bool Node::insert(const MessageHash& hash, const Message& msg) {
+    bool Node::insert(uint32_t hash, const Message& msg) {
         // copy into Buffer fields
         uint32_t n = buffer_.num_elements();
         buffer_.hashes_[n] = hash;
@@ -145,7 +145,7 @@ namespace gpucbt {
             fprintf(stderr, "Node: %d: first node chosen: %d (sep: %u, \
                 child: %d); first element: %u\n", id_, children_[curChild]->id_,
                     children_[curChild]->separator_, curChild,
-                    buffer_.hashes_[0].hash());
+                    buffer_.hashes_[0]);
 #endif
             uint32_t num = buffer_.num_elements();
 
@@ -248,7 +248,7 @@ namespace gpucbt {
 
         Buffer temp;
         CopyFromBuffer(temp, 0, splitIndex);
-        separator_ = buffer_.hashes_[splitIndex].hash();
+        separator_ = buffer_.hashes_[splitIndex];
 
         // deallocate the old buffer
         buffer_.Deallocate();
@@ -287,7 +287,7 @@ namespace gpucbt {
         }
 #endif
         memmove(&dest_buffer.hashes_[dest_num], &buffer_.hashes_[index],
-                num * sizeof(MessageHash));
+                num * sizeof(uint32_t));
         memmove(&dest_buffer.messages_[dest_num], &buffer_.messages_[index],
                 num * sizeof(Message));
         dest_buffer.set_num_elements(dest_num + num);
@@ -504,15 +504,30 @@ namespace gpucbt {
                 {
                     clock_t start, finish;
                     uint64_t num = buffer_.num_elements();
-                    start = clock();
-                    bool use_gpu = id() % 2 == 0? true : false;
+//                    start = clock();
+//                    bool use_gpu = id() % 2 == 0? true : false;
+
+                    bool use_gpu = true;
+/*
+                    if (sem_trywait(&tree_->gpu_in_use_) == 0)
+                        use_gpu = true;
+                    else
+                        use_gpu = false;
+*/
+
                     sortBuffer(use_gpu);
-                    if (!use_gpu)
-                        aggregateSortedBuffer();
+
+/*
+                    if (use_gpu)
+                        sem_post(&tree_->gpu_in_use_);
+*/
+/*
                     finish = clock();
                     double duration = (double)(finish - start) / CLOCKS_PER_SEC;
                     fprintf(stderr, "%s took %lf for %ld elements\n",
                             use_gpu? "GPU" : "CPU", duration, num);
+*/
+                    aggregateSortedBuffer();
                 }
                 break;
             case EMPTY:
