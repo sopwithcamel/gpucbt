@@ -32,8 +32,8 @@
 namespace gpucbt {
     class CompressTree;
 
-    const uint32_t Buffer::kMaximumElements = 10000000;
-    const uint32_t Buffer::kEmptyThreshold = 5000000;
+    const uint32_t Buffer::kMaximumElements = 40000000;
+    const uint32_t Buffer::kEmptyThreshold = 20000000;
 
     Buffer::Buffer() :
             messages_(NULL),
@@ -215,7 +215,7 @@ namespace gpucbt {
 
     bool Buffer::Aggregate(bool use_gpu) {
         bool ret;
-        if (false/*use_gpu*/) {
+        if (use_gpu) {
             ret = GPUAggregate();
         } else {
             ret = CPUAggregate();
