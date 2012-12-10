@@ -105,8 +105,6 @@ namespace gpucbt {
             lastOffset_ = 0;
             lastElement_ = 0;
 
-            /* Wait for all outstanding compression work to finish */
-            compressor_->WaitUntilCompletionNoticeReceived();
             allFlush_ = true;
 
             // page in and decompress first leaf
