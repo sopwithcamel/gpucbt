@@ -124,7 +124,7 @@ namespace gpucbt {
             if (++lastLeafRead_ == allLeaves_.size()) {
                 int all_done;                                                            
                 do {                                                                     
-                    usleep(100);                                                         
+                    usleep(10000);                                                         
                     sem_getvalue(&sleepSemaphore_, &all_done);                           
                 } while (all_done);
 #ifdef CT_NODE_DEBUG
@@ -184,7 +184,7 @@ namespace gpucbt {
 
         int all_done;                                                            
         do {                                                                     
-            usleep(100);                                                         
+            usleep(10000);                                                         
             sem_getvalue(&sleepSemaphore_, &all_done);                           
         } while (all_done);
 
