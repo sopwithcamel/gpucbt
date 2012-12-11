@@ -96,6 +96,7 @@ namespace gpucbt {
         pthread_cond_t emptyRootAvailable_;
 
         bool allFlush_;
+        bool empty_;
         EmptyType emptyType_;
         sem_t sleepSemaphore_;
         std::deque<Node*> leavesToBeEmptied_;
@@ -123,9 +124,6 @@ namespace gpucbt {
 
         /* Members for async-sorting */
         Merger* merger_;
-
-        /* Compression-related */
-        Compressor* compressor_;
 
 #ifdef ENABLE_COUNTERS
         /* Monitor */

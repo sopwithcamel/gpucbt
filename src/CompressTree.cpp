@@ -37,6 +37,7 @@ namespace gpucbt {
             b_(b),
             nodeCtr(1),
             allFlush_(true),
+            empty_(true),
             lastLeafRead_(0),
             lastOffset_(0),
             lastElement_(0),
@@ -60,7 +61,7 @@ namespace gpucbt {
         // copy buf into root node buffer
         // root node buffer always decompressed
         if (num > 0)
-            allFlush_ = false;
+            allFlush_ = empty_ = false;
         if (!threadsStarted_) {
             StartThreads();
         }
@@ -99,17 +100,17 @@ namespace gpucbt {
     }
 
     bool CompressTree::nextValue(Message& msg) {
+        if (empty_)
+            return false;
+
         if (!allFlush_) {
             FlushBuffers();
             lastLeafRead_ = 0;
             lastOffset_ = 0;
             lastElement_ = 0;
 
-            /* Wait for all outstanding compression work to finish */
-            compressor_->WaitUntilCompletionNoticeReceived();
             allFlush_ = true;
 
-            // page in and decompress first leaf
             Node* curLeaf = allLeaves_[0];
             while (curLeaf->buffer_.num_elements() == 0)
                 curLeaf = allLeaves_[++lastLeafRead_];
@@ -165,7 +166,7 @@ namespace gpucbt {
         }
         allLeaves_.clear();
         leavesToBeEmptied_.clear();
-        allFlush_ = true;
+        allFlush_ = empty_ = true;
         lastLeafRead_ = 0;
         lastOffset_ = 0;
         lastElement_ = 0;

@@ -196,10 +196,10 @@ namespace gpucbt {
             pthread_mutex_lock(&(me->mutex_));
             pthread_cond_wait(&(me->hasWork_), &(me->mutex_));
             pthread_mutex_unlock(&(me->mutex_));
-
             sem_post(&tree_->sleepSemaphore_);
-    
             setThreadAwake(me->index_);
+            if (checkInputComplete())
+                break;
 
 #ifdef CT_NODE_DEBUG
             fprintf(stderr, "%s (%d) fingered\n", GetSlaveName().c_str(),
@@ -220,8 +220,6 @@ namespace gpucbt {
 #endif
                 Work(n);
             }
-            if (checkInputComplete())
-                break;
         }
 #ifdef CT_NODE_DEBUG
         fprintf(stderr, "%s (%d) quitting: %ld\n",

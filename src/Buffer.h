@@ -56,6 +56,8 @@ namespace gpucbt {
 
           /* Sorting-related */
           void Quicksort(uint32_t left, uint32_t right);
+          void RadixSort(uint32_t left, uint32_t right, uint32_t shift);
+          void InsertionSort(uint32_t left, uint32_t right);
           void GPUSort(uint32_t num);
           bool Sort(bool use_gpu = false);
 

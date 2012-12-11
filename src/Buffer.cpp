@@ -83,6 +83,79 @@ namespace gpucbt {
         set_num_elements(0);
     }
 
+    void Buffer::InsertionSort(uint32_t uleft, uint32_t uright) {
+        uint32_t x, y, temp;
+        uint32_t per_temp;
+        for (x = uleft; x < uright; ++x) {
+            for (y = x; y > uleft && hashes_[y - 1] > hashes_[y]; y--) {
+                temp = hashes_[y];
+                hashes_[y] = hashes_[y-1];
+                hashes_[y-1] = temp;
+
+                per_temp = perm_[y];
+                perm_[y] = perm_[y-1];
+                perm_[y-1] = per_temp;
+            }
+        }
+    }
+
+    void Buffer::RadixSort(uint32_t uleft, uint32_t uright, uint32_t shift) {
+        uint32_t x, y, value, temp;
+        uint32_t last[256] = { 0 }, pointer[256];
+
+        uint32_t per, per_temp;
+
+        for (x = uleft; x < uright; ++x) {
+            ++last[(hashes_[x] >> shift) & 0xFF];
+        }
+
+        last[0] += uleft;
+        pointer[0] = uleft;
+
+        for (x = 1; x < 256; ++x) {
+            pointer[x] = last[x - 1];
+            last[x] += last[x - 1];
+        }
+
+        for (x = 0; x < 256; ++x) {
+            while (pointer[x] != last[x]) {
+                value = hashes_[pointer[x]];
+                per = perm_[pointer[x]];
+                
+                y = (value >> shift) & 0xFF;
+                while (x != y) {
+                    temp = hashes_[pointer[y]];
+                    hashes_[pointer[y]] = value;
+                    value = temp;
+
+                    per_temp = perm_[pointer[y]];
+                    perm_[pointer[y]] = per;
+                    per = per_temp;
+
+                    pointer[y]++;
+                    y = (value >> shift) & 0xFF;
+                }
+                hashes_[pointer[x]] = value;
+                perm_[pointer[x]] = per;
+                pointer[x]++;
+            }
+        }
+
+        if (shift > 0) {
+            shift -= 8;
+            for (x=0; x<256; ++x) {
+                temp = x > 0 ? pointer[x] - pointer[x-1] : pointer[0] - uleft;
+                if (temp > 64) {
+                    RadixSort(pointer[x] - temp, pointer[x], shift);
+                } else if (temp > 1) {
+                    // std::sort(array + (pointer[x] - temp), array + pointer[x]);
+                    InsertionSort(pointer[x] - temp, pointer[x]);
+                }
+            }
+        }
+    }
+
+
     void Buffer::Quicksort(uint32_t uleft, uint32_t uright) {
         int32_t i, j, stack_pointer = -1;
         int32_t left = uleft;
@@ -90,7 +163,6 @@ namespace gpucbt {
         int32_t* rstack = new int32_t[128];
 
         uint32_t swap, temp;
-
         uint32_t swh, tmph;
 
         while (true) {
@@ -208,7 +280,8 @@ namespace gpucbt {
         } else {
             for (uint32_t i = 0; i < num; ++i)
                 perm_[i] = i;
-            Quicksort(0, num - 1);
+//            Quicksort(0, num - 1);
+            RadixSort(0, num - 1, 24);
         }
         return true;
     }
