@@ -37,6 +37,7 @@ namespace gpucbt {
             b_(b),
             nodeCtr(1),
             allFlush_(true),
+            empty_(true),
             lastLeafRead_(0),
             lastOffset_(0),
             lastElement_(0),
@@ -60,7 +61,7 @@ namespace gpucbt {
         // copy buf into root node buffer
         // root node buffer always decompressed
         if (num > 0)
-            allFlush_ = false;
+            allFlush_ = empty_ = false;
         if (!threadsStarted_) {
             StartThreads();
         }
@@ -112,6 +113,8 @@ namespace gpucbt {
             while (curLeaf->buffer_.num_elements() == 0)
                 curLeaf = allLeaves_[++lastLeafRead_];
         }
+        if (empty_)
+            return false;
 
         Node* curLeaf = allLeaves_[lastLeafRead_];
         msg = curLeaf->buffer_.messages_[lastElement_];
@@ -163,7 +166,7 @@ namespace gpucbt {
         }
         allLeaves_.clear();
         leavesToBeEmptied_.clear();
-        allFlush_ = true;
+        allFlush_ = empty_ = true;
         lastLeafRead_ = 0;
         lastOffset_ = 0;
         lastElement_ = 0;

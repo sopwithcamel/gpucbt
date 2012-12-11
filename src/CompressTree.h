@@ -96,6 +96,7 @@ namespace gpucbt {
         pthread_cond_t emptyRootAvailable_;
 
         bool allFlush_;
+        bool empty_;
         EmptyType emptyType_;
         sem_t sleepSemaphore_;
         std::deque<Node*> leavesToBeEmptied_;
