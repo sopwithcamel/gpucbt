@@ -125,9 +125,6 @@ namespace gpucbt {
         /* Members for async-sorting */
         Merger* merger_;
 
-        /* Compression-related */
-        Compressor* compressor_;
-
 #ifdef ENABLE_COUNTERS
         /* Monitor */
         Monitor* monitor_;

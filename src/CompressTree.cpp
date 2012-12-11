@@ -100,6 +100,9 @@ namespace gpucbt {
     }
 
     bool CompressTree::nextValue(Message& msg) {
+        if (empty_)
+            return false;
+
         if (!allFlush_) {
             FlushBuffers();
             lastLeafRead_ = 0;
@@ -108,13 +111,10 @@ namespace gpucbt {
 
             allFlush_ = true;
 
-            // page in and decompress first leaf
             Node* curLeaf = allLeaves_[0];
             while (curLeaf->buffer_.num_elements() == 0)
                 curLeaf = allLeaves_[++lastLeafRead_];
         }
-        if (empty_)
-            return false;
 
         Node* curLeaf = allLeaves_[lastLeafRead_];
         msg = curLeaf->buffer_.messages_[lastElement_];
