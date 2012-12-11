@@ -216,8 +216,8 @@ namespace gpucbt {
         return ret;
     }
 
-    bool Node::aggregateSortedBuffer() {
-        bool ret = buffer_.Aggregate();
+    bool Node::aggregateSortedBuffer(bool use_gpu) {
+        bool ret = buffer_.Aggregate(use_gpu);
         return ret;
     }
 
@@ -527,7 +527,7 @@ namespace gpucbt {
                     fprintf(stderr, "%s took %lf for %ld elements\n",
                             use_gpu? "GPU" : "CPU", duration, num);
 */
-                    aggregateSortedBuffer();
+                    aggregateSortedBuffer(use_gpu);
                 }
                 break;
             case EMPTY:

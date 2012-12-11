@@ -93,7 +93,7 @@ namespace gpucbt {
          * aggregating by merging. */
         bool sortBuffer(bool use_gpu);
         /* Aggregate the sorted root buffer */
-        bool aggregateSortedBuffer();
+        bool aggregateSortedBuffer(bool use_gpu);
         /* copy contents from node's buffer into this buffer. Starting from
          * index = index, copy num elements' data.
          */
